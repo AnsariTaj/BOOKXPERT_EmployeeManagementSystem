@@ -22,23 +22,52 @@ namespace BOOKXPERT_EmployeeManagementSystem.Controllers
         public async Task<IActionResult> GetStates()
         {
             var states = await _employeeRepository.GetStatesAsync();
-            return Ok(states);
+            if (states == null)
+            {
+                return NotFound();
+            }
+            var response = new
+            {
+                Success = true,
+                Message = "Student details got seccessfully",
+                Data = states
+            };
+            return Ok(response);
         }
         [HttpGet]
         public async Task<IActionResult> GetEmployees()
         {
             var employees = await _employeeRepository.GetAllEmployeesAsync();
-            return Ok(employees);
+            if (employees == null)
+            {
+                return NotFound();
+            }
+            var response = new
+            {
+                Success = true,
+                Message = "Student details got seccessfully",
+                Data = employees
+            };
+            return Ok(response);
         }
         [HttpGet("{id}")]
         public async Task<IActionResult> GetEmployeeById(int id)
         {
             var employee = await _employeeRepository.GetEmployeeByIdAsync(id);
             if (employee == null)
+            {
                 return NotFound();
-            return Ok(employee);
+            }
+            var response = new
+            {
+                Success = true,
+                Message = "Student details got seccessfully",
+                Data = employee
+            };
+            return Ok(response);
         }
         [HttpPost]
+        [Route("CreateEmployee")]
         public async Task<IActionResult> CreateEmployee([FromBody] EmployeeModel employee)
         {
             await _employeeRepository.CreateEmployeeAsync(employee);

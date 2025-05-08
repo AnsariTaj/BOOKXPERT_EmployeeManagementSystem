@@ -1,0 +1,311 @@
+﻿@using BookXpertEmployeeManagementSystem
+@model EmployeeViewModel
+
+@{
+    ViewData["Title"] = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<!-- jQuery -->
+@*<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>*@
+<!-- jQuery and jQuery Validation -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/additional-methods.min.js"></script>
+
+
+<!-- Bootstrap JS (after jQuery) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<style>
+    table, th, td {
+        border: 1px solid;
+    }
+
+    table {
+        width: 100%;
+    }
+
+    table {
+        border-collapse: collapse;
+    }
+</style>
+
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create" asp-controller="Employees">
+            <!-- Button to open modal -->
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#employeeModal">
+                + Create Employee
+            </button>
+
+            <!-- Modal -->
+            <div class="modal fade" id="employeeModal" tabindex="-1" aria-labelledby="employeeModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content rounded-4 shadow-lg">
+
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title" id="employeeModalLabel">Create Employee</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <!-- Form Fields -->
+                            <div class="form-floating mb-1">
+                                Name<input type="text" class="form-control required" id="Name" name="Name" placeholder="Name">
+                            </div>
+
+                            <div class="form-floating mb-1">
+                                Designation
+                                <input type="text" class="form-control required" id="Designation" name="Designation" placeholder="Designation">
+                            </div>
+
+                            <div class="form-floating mb-1">
+                                Date Of Joining
+                                <input type="date" class="form-control required" id="DateOfJoin" name="DateOfJoin">
+                            </div>
+
+                            <div class="form-floating mb-1">
+                                Salary
+                                <input type="number" class="form-control required" id="Salary" name="Salary">
+                            </div>
+                            <div class="mb-1">
+                                <div class="d-flex gap-3">
+                                    <label class="form-label d-block mb-2 required">Gender:</label>
+                                    <div class="form-check ml-2">
+                                        <input class="form-check-input" type="radio" name="Gender" id="Male" value="Male">
+                                        <label class="form-check-label" for="Male">Male</label>
+                                    </div>
+                                    <div class="form-check ml-2">
+                                        <input class="form-check-input" type="radio" name="Gender" id="Female" value="Female">
+                                        <label class="form-check-label" for="Female">Female</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-1">
+                                Date of Birth
+                                <input type="date" class="form-control" id="DateOfBirth" name="DateOfBirth">
+                            </div>
+
+                            <div class="mb-1">
+                                Age
+                                <input type="number" class="form-control" id="age" name="Age" placeholder="Age">
+                            </div>
+
+                            <div class="d-flex mt-2">
+                                <select class="form-select form-control" id="State" name="State" aria-label="Select State">
+                                    <option value="0">-- Select States --</option>
+                                    @foreach (var states in Model.States)
+                                    {
+                                        <option>@states.stateName</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-warning" id="ClearForm">Clear</button>
+                            <button type="submit" class="btn btn-success" asp-action="CreateEmployee" asp-controller="Employees" id="employeeForm">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<table class="table table-bordered table-striped table-hover text-center align-middle mt-2">
+    <thead class="table-primary">
+        <tr>
+            <th>S.No.</th>
+            <th>Name</th>
+            <th>Designation</th>
+            <th>DOJ</th>
+            <th>Salary</th>
+            <th>Gender</th>
+            <th>State</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var emp in Model.Employees)
+        {
+            <tr>
+                <td>@emp.EmployeeId</td>
+                <td class="text-start">@emp.Name</td>
+                <td class="text-start">@emp.Designation</td>
+                <td>
+                    @emp.DateOfJoin.ToString("dd-MM-yyyy")
+                </td>
+                <td class="salary-cell">@emp.Salary.ToString("C")</td>
+                <td>@emp.Gender</td>
+                <td>@emp.State</td>
+                <td>
+                    @Html.ActionLink("Delete", "DeleteEmloyee", new { id = emp.EmployeeId },
+                       new { @class = "btn btn-danger", id = "deleteBtn_" + emp.EmployeeId })
+
+                </td>
+            </tr>
+        }
+        <!-- Placeholder for Total Salary Row -->
+        <tr id="totalSalaryRow" class="table-secondary">
+            <td colspan="4" class="text-end"><strong>Total Salary</strong></td>
+            <td><strong id="totalSalary">--</strong></td>
+            <td colspan="3"></td> <!-- Empty cells for the remaining columns -->
+        </tr>
+    </tbody>
+</table>
+<script>
+    $(document).ready(function () {
+        function calculateTotalSalary() {
+            var totalSalary = 0;
+
+            // Iterate through each salary cell and sum up the values
+            $('.salary-cell').each(function () {
+                var salaryText = $(this).text();
+                var salary = parseFloat(salaryText.replace(/[^0-9.-]+/g, "")); // Remove any non-numeric characters (e.g., currency symbols)
+                if (!isNaN(salary)) {
+                    totalSalary += salary;
+                }
+            });
+
+            // Display the total salary in the appropriate row and format it as INR (₹)
+            $('#totalSalary').text(totalSalary.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }));
+        }
+
+        // Calculate and display total salary when the document is ready
+        calculateTotalSalary();
+    });
+
+
+    $(document).ready(function () {
+        // Bind click event to all delete buttons
+        $('.btn-danger').click(function (e) {
+            // Prevent the default action (link redirection)
+            e.preventDefault();
+
+            // Show confirmation dialog
+            var confirmed = confirm("Are you sure you want to delete this employee?");
+
+            if (confirmed) {
+                // If confirmed, get the link URL and navigate to it (i.e., submit the delete request)
+                window.location.href = $(this).attr('href');
+            }
+        });
+    });
+
+
+</script>
+@if (TempData["AlertMessage"] != null)
+{
+    <script>
+        alert('@TempData["AlertMessage"]');
+    </script>
+}
+
+@*Clear all TextBox*@
+<script>
+    $(document).ready(function () {
+        // Clear form fields when the "Clear" button is clicked
+        $('#ClearForm').click(function () {
+            $('#Name').val('');
+            $('#Designation').val('');
+            $('#DateOfJoin').val('');
+            $('#Salary').val('');
+            $('input[name="Gender"]:checked').prop('checked', false); // Clear radio buttons
+            $('#DateOfBirth').val('');
+            $('#age').val('');
+            $('#State').val('0'); // Reset the State dropdown
+        });
+    });
+</script>
+<script>
+    $(document).ready(function () {
+        // Initialize form validation
+        $('#employeeForm').validate({
+            rules: {
+                Name: {
+                    required: true,
+                    minlength: 2,
+                    pattern: /^[A-Za-z\s]+$/ // Only allow letters and spaces for Name
+                },
+                Designation: {
+                    required: true,
+                    minlength: 2
+                },
+                DateOfJoin: {
+                    required: true,
+                    date: true
+                },
+                Salary: {
+                    required: true,
+                    number: true,
+                    min: 0 // Salary should be a positive number
+                },
+                Gender: {
+                    required: true
+                },
+                State: {
+                    required: true,
+                    notEqual: "0" // Ensure the user selects a state other than the default
+                }
+            },
+            messages: {
+                Name: {
+                    required: "Please enter the name.",
+                    minlength: "Name must be at least 2 characters long.",
+                    pattern: "Name can only contain letters and spaces."
+                },
+                Designation: {
+                    required: "Please enter the designation.",
+                    minlength: "Designation must be at least 2 characters long."
+                },
+                DateOfJoin: {
+                    required: "Please select the date of joining.",
+                    date: "Please enter a valid date."
+                },
+                Salary: {
+                    required: "Please enter the salary.",
+                    number: "Salary must be a valid number.",
+                    min: "Salary cannot be negative."
+                },
+                Gender: {
+                    required: "Please select the gender."
+                },
+                State: {
+                    required: "Please select a state.",
+                    notEqual: "Please select a valid state."
+                }
+            },
+            submitHandler: function (form) {
+                form.submit(); // Submit the form if validation passes
+            }
+        });
+
+        // Custom validation method for non-default state selection
+        $.validator.addMethod("notEqual", function (value, element, param) {
+            return value !== param;
+        }, "Please select a valid state.");
+    });
+</script>
+
+
+<script>
+    $(document).ready(function () {
+        $('#DateOfBirth').on('change', function () {
+            var dob = new Date($(this).val());
+            var today = new Date();
+
+            var age = today.getFullYear() - dob.getFullYear();
+            var monthDiff = today.getMonth() - dob.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                age--;
+            }
+
+            if (!isNaN(age)) {
+                $('#age').val(age);
+            } else {
+                $('#age').val('');
+            }
+        });
+    });
+</script>
+
+
+
